@@ -1,36 +1,8 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<img width="731" height="517" alt="image" src="https://github.com/user-attachments/assets/73883fb3-00c1-4415-9804-6def5140627c" />
+<img width="578" height="410" alt="image" src="https://github.com/user-attachments/assets/1f2f5bc3-0756-4f1c-a289-4b55596c5cc9" />
+<img width="711" height="506" alt="image" src="https://github.com/user-attachments/assets/26503384-8a35-4ae3-8440-2a815fe8a834" />
+<img width="497" height="354" alt="image" src="https://github.com/user-attachments/assets/bfd6448b-4acc-4f01-9572-2e7bd1f37ee7" />
+<img width="498" height="356" alt="image" src="https://github.com/user-attachments/assets/193364f3-214e-47a8-ac5f-bbcbaae1fc67" />
 
-## Getting Started
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
