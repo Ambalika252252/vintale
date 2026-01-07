@@ -708,7 +708,7 @@ export default function Home() {
 
       <section ref={collectionsRef} id="collections" className="relative overflow-hidden bg-white min-h-screen">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="absolute bg-white/80 top-[16%]">
+          <div className="absolute bg-white/80 top-[3%] left-[6%]">
             <div className="mx-auto flex max-w-7xl flex-col px-6 py-4">
               <div className="flex items-center gap-2">
                 <Image src="/logo.png" alt="Vintale" width={130} height={28} />
@@ -723,7 +723,7 @@ export default function Home() {
           </div>
           <div className="relative grid grid-cols-1 items-center gap-10 lg:grid-cols-2">
             {/* Left copy */}
-            <div className="absolute z-10" style={{top: '30%'}}>
+            <div className="absolute z-10" style={{top: '16%'}}>
               <h1 className={`${montaguSlab.className} leading-[0.9] tracking-[-0.03em] text-[56px] sm:text-[80px] lg:text-[190px] text-zinc-900`}>
                 Let the
               </h1>
@@ -743,7 +743,7 @@ export default function Home() {
                 </a>
 
               <Badge
-                className="absolute right-6 top-12 hidden items-center justify-center lg:flex top-[80%]"
+                className="absolute right-6 top-12 hidden items-center justify-center lg:flex top-[70%]"
                 size={175}
                 useDefaultStar={false}
                 burstClipPath={makeStarPolygonStatic(11, 34, 50, -90)}
@@ -763,9 +763,9 @@ export default function Home() {
                 priority
                 style={{
                   position: "absolute",
-                  top: -360,
+                  top: -400,
                   left: '50%',
-                  transform: "rotate(-23deg) scale(1.8)",
+                  transform: "rotate(-22deg) scale(1.8)",
                   transformOrigin: "143% 40%",
                   opacity: 1,
                 }}
