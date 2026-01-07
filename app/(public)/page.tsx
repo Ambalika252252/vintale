@@ -152,6 +152,7 @@ export default function Home() {
           const containerRect = bottleContainerRef.current.getBoundingClientRect();
           const centerX = containerRect.left + containerRect.width / 2;
           const centerY = containerRect.top + containerRect.height / 2;
+          
           gsap.set(roseSvgRef.current, {
             x: centerX,
             y: centerY,
@@ -296,7 +297,7 @@ export default function Home() {
             {
               scale: 1,
               x: "50vw",
-              y: "-100vh",
+              y: "-120vh",
               xPercent: -50,
               yPercent: -50,
               rotate: 0,
@@ -414,6 +415,36 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    // Simple IntersectionObserver to hide GSAP bottle in last section
+    if (!roseSvgRef.current || !collectionsRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (roseSvgRef.current) {
+            if (entry.isIntersecting) {
+              // Last section is visible - hide GSAP bottle
+              roseSvgRef.current.style.visibility = 'hidden';
+            } else {
+              // Last section not visible - show GSAP bottle
+              roseSvgRef.current.style.visibility = 'visible';
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.2,
+      }
+    );
+
+    observer.observe(collectionsRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   const products = [
     { id: 1, name: "Golden Chard", color: "#F4B35F", price: 129, img: "/assets/Gold.svg" },
     { id: 2, name: "Scarlet Merlot", color: "#E65164", price: 149, img: "/assets/Red.svg" },
@@ -430,7 +461,7 @@ export default function Home() {
       <div
         ref={roseSvgRef}
         className="pointer-events-none fixed z-30"
-        style={{ willChange: "transform, opacity" }}
+        style={{ willChange: "transform, opacity", opacity: 0 }}
       >
         <Image
           src="/assets/Rose.svg"
@@ -724,13 +755,13 @@ export default function Home() {
             <div ref={lastBottleWrapRef} className="relative h-[900px] w-[900px] lg:h-[1100px] lg:w-[1100px] left-[100%]">
               <Image
                 ref={lastBottleImgRef}
-                src="/assets/Rose.png"
+                src="/assets/Rose.svg"
                 alt="Blossom Rosé"
+                width={1600}
+                height={1619}
                 className="object-contain"
                 priority
-                fill
                 style={{
-                  color: "transparent",
                   position: "absolute",
                   top: -360,
                   left: '50%',
