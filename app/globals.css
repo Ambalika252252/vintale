@@ -24,3 +24,58 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ===============================
+   Button 3 – Sliding Background
+   Based on Tympanus Button Hover Styles #3
+   =============================== */
+
+   .btn-3 {
+    background: #000;
+    color: #fff;
+    border-radius: 999px;
+    transition: color 0.3s ease;
+  }
+  
+  /* The colored slide background */
+  .btn-3-bg {
+    transform: translateX(-100%);
+    transition: transform 0.35s ease;
+  }
+  
+  /* Text + arrow */
+  .btn-3-text .arrow {
+    transition: transform 0.35s ease, opacity 0.35s ease;
+    opacity: 0.6;
+  }
+  
+  /* Hover state */
+  .btn-3:hover {
+    color: white;
+  }
+  
+  .btn-3:hover .btn-3-bg {
+    transform: translateX(0%);
+  }
+  
+  .btn-3:hover .btn-3-text .arrow {
+    opacity: 1;
+    transform: translateX(4px);
+  }
+  
+  /* Prevent text moving */
+  .btn-3-text {
+    position: relative;
+    z-index: 10;
+  }
+
+  
+  .btn-3-bg {
+    background: linear-gradient(90deg, #eb235c, #eb235c);
+  }
+
+  /* .btn-3:hover {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+  } */
+
+  

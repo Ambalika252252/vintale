@@ -70,26 +70,70 @@ export default function Home() {
   const circleRef = useRef<HTMLDivElement | null>(null);
   const circleOuterRef = useRef<HTMLDivElement | null>(null);
   const ringOuterRef = useRef<HTMLDivElement | null>(null);
+  const hasLoggedFullRef = useRef<boolean>(false);
   const badgeBurstRef = useRef<HTMLDivElement | null>(null);
   const ctaRef = useRef<HTMLDivElement | null>(null);
   const lastBottleWrapRef = useRef<HTMLDivElement | null>(null);
   const lastBottleImgRef = useRef<HTMLImageElement | null>(null);
   const lastBadgeBurstRef = useRef<HTMLDivElement | null>(null);
-  const featureAnglesDeg = [165, 120, 90, 60, 15];
-  const getEllipsePoint = (angleDeg: number, radiusX: number, radiusY: number) => {
-    const rad = (angleDeg * Math.PI) / 180;
-    return {
-      x: radiusX * Math.cos(rad),
-      y: radiusY * Math.sin(rad),
-    };
+
+  type AgentPayload = {
+    hypothesisId: string;
+    location: string;
+    message: string;
+    data?: unknown;
+    runId?: string;
+    sessionId?: string;
+    timestamp?: number;
   };
+  const agentLog = (payload: AgentPayload) =>
+    fetch("http://127.0.0.1:7242/ingest/7bb29de4-8ddb-41c7-9301-e135e6c89488", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        sessionId: "debug-session",
+        runId: "pre-fix",
+        timestamp: Date.now(),
+        ...payload,
+      }),
+    }).catch(() => { });
 
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
+    agentLog({
+      hypothesisId: "H1",
+      location: "app/(public)/page.tsx:effect",
+      message: "Effect mounted and ScrollTrigger registered",
+      data: { width: typeof window !== "undefined" ? window.innerWidth : null },
+    });
+
+    if (titleRef.current) {
+      const computed = window.getComputedStyle(titleRef.current);
+      agentLog({
+        hypothesisId: "H4",
+        location: "app/(public)/page.tsx:title",
+        message: "Title computed styles",
+        data: { fontFamily: computed.fontFamily, fontWeight: computed.fontWeight },
+      });
+    }
+    // #endregion
+
+    // Store resize handlers for cleanup (parity with duplicate.tsx)
     const resizeHandlers: Array<() => void> = [];
-    
-    const handleKeyNav = (evt: KeyboardEvent) => { 
+
+    const ctx = gsap.context(() => {
+      gsap.from(".fade-in", {
+        opacity: 0,
+        y: 24,
+        duration: 0.8,
+        stagger: 0.08,
+        ease: "power2.out",
+      });
+
+      const mm = gsap.matchMedia();
+
+      const handleKeyNav = (evt: KeyboardEvent) => { 
         if (evt.key !== "ArrowRight" && evt.key !== "ArrowLeft") return;
         const sections = Array.from(document.querySelectorAll("section")) as HTMLElement[];
         if (sections.length === 0) return;
@@ -110,18 +154,7 @@ export default function Home() {
           evt.key === "ArrowRight" ? nextByDirection(1) : nextByDirection(-1);
         window.scrollTo({ top: targetTop, behavior: "smooth" });
       };
-    window.addEventListener("keydown", handleKeyNav);
-
-    const ctx = gsap.context(() => {
-      gsap.from(".fade-in", {
-        opacity: 0,
-        y: 24,
-        duration: 0.8,
-        stagger: 0.08,
-        ease: "power2.out",
-      });
-
-      const mm = gsap.matchMedia();
+      window.addEventListener("keydown", handleKeyNav);
 
       if (badgeRef.current || ctaRef.current) {
         gsap.fromTo(
@@ -141,6 +174,7 @@ export default function Home() {
       }
 
       mm.add("(min-width: 1024px)", () => {
+        // Helpers for cross-section bottle (parity with duplicate.tsx)
         const getStoryScale = () => {
           const vw = window.innerWidth;
           if (vw < 640) return 0.18;
@@ -201,9 +235,10 @@ export default function Home() {
             collectionsStart: (collectionsTop - heroTop) / (totalScroll || 1),
           };
         };
+        // Compute once to keep parity; reserved for future use
         calculateProgress();
 
-        // Main Rose SVG ScrollTrigger animation - spans from hero to collections
+        // Desktop: Main Rose SVG ScrollTrigger animation - spans from hero to collections
         if (roseSvgRef.current && heroRef.current && bottleContainerRef.current && collectionsRef.current) {
           // Wait for layout, then calculate initial position
           requestAnimationFrame(() => {
@@ -228,7 +263,6 @@ export default function Home() {
               featuresStart: (featuresTop - heroTop) / totalScroll,
               featuresEnd: (featuresTop + featuresHeight - heroTop) / totalScroll,
               collectionsStart: (collectionsTop - heroTop) / totalScroll,
-              collectionsEnd: (collectionsTop + collectionsHeight - heroTop) / totalScroll,
             };
           })();
 
@@ -249,6 +283,7 @@ export default function Home() {
             },
           });
 
+          // Hero section: Start with slight rotation, animate to center upright (scaled down)
           roseTl.to(
             roseSvgRef.current,
             {
@@ -259,11 +294,12 @@ export default function Home() {
             0
           );
 
+          // Story section (full background): Fully visible, straightened, properly scaled
           const storyScale = getStoryScale();
           roseTl.fromTo(
             roseSvgRef.current,
             {
-              scale: 1,
+              scale: 0.8,
             },
             {
               scale: storyScale,
@@ -272,53 +308,56 @@ export default function Home() {
               y: "50vh",
               xPercent: -50,
               yPercent: -50,
-              ease: "power1.out",
+              ease: "none",
             },
             progress.storyStart
           );
 
+          // Keep bottle straight and visible throughout the story section
           roseTl.to(
             roseSvgRef.current,
             {
-              scale: 0.6,
+              scale: storyScale,
               rotate: 0,
               x: "50vw",
               y: "50vh",
               xPercent: -50,
               yPercent: -50,
-              opacity: 1,
+              ease: "none",
             },
             progress.storyEnd
           );
 
+          // Features section: Scale down further, move slightly up
           roseTl.to(
             roseSvgRef.current,
             {
-              scale: 1,
-              x: "50vw",
-              y: "-100vh",
-              xPercent: -50,
-              yPercent: -50,
+              y: "20vh",
+              yPercent: 0,
+              scale: 0.5,
               rotate: 0,
+              ease: "none",
             },
-            progress.featuresEnd
+            progress.featuresStart
           );
 
+          // Collections section: Fade out as bottles are showcased
           roseTl.to(
             roseSvgRef.current,
             {
-              scale: 0.2,
-              x: "50vw",
-              y: "46vh",
-              xPercent: -50,
-              yPercent: -50,
-              opacity: 1,
+              opacity: 0,
+              scale: 0.4,
+              ease: "none",
             },
             progress.collectionsStart
           );
-
         }
-        
+        agentLog({
+          hypothesisId: "H2",
+          location: "app/(public)/page.tsx:matchMedia",
+          message: "Desktop media query matched; creating timeline",
+          data: {},
+        });
         const makeStarPolygon = (
           spikes: number,
           innerRadiusPct: number,
@@ -356,6 +395,12 @@ export default function Home() {
             repeat: -1,
             transformOrigin: "50% 50%",
           });
+          agentLog({
+            hypothesisId: "H8",
+            location: "app/(public)/page.tsx:lastBadge",
+            message: "Started rotation for last-section badge",
+            data: {},
+          });
         }
         
         const vw = window.innerWidth;
@@ -363,6 +408,14 @@ export default function Home() {
         const baseDiameter = 820; 
         const overscan = 1.4;
         const scaleFull = (Math.max(vw, vh) * overscan) / baseDiameter;
+
+        agentLog({
+          hypothesisId: "H5",
+          location: "app/(public)/page.tsx:scaleCompute",
+          message: "Computed scales for full-bleed circle",
+          data: { vw, vh, baseDiameter, scaleFull },
+        });
+        // #endregion
 
         const tl = gsap.timeline({
           scrollTrigger: {
@@ -372,6 +425,24 @@ export default function Home() {
             scrub: 1,
             pin: bottleWrapRef.current!,
             anticipatePin: 1,
+            onUpdate: (self) => {
+              if (!hasLoggedFullRef.current && self.progress > 0.98) {
+                const rect = circleRef.current?.getBoundingClientRect();
+                agentLog({
+                  hypothesisId: "H6",
+                  location: "app/(public)/page.tsx:fullBleedCheck",
+                  message: "Circle near full-bleed",
+                  data: {
+                    vw: window.innerWidth,
+                    vh: window.innerHeight,
+                    circleW: rect?.width ?? null,
+                    circleH: rect?.height ?? null,
+                    progress: self.progress,
+                  },
+                });
+                hasLoggedFullRef.current = true;
+              }
+            },
           },
         });
 
@@ -400,18 +471,63 @@ export default function Home() {
             { scale: 1.06, ease: "none" },
             "<"
           );
+        agentLog({
+          hypothesisId: "H5",
+          location: "app/(public)/page.tsx:circleTimeline",
+          message: "Circle/bottle timeline configured",
+          data: { scaleFull, vw, vh },
+        });
+        agentLog({
+          hypothesisId: "H2",
+          location: "app/(public)/page.tsx:timeline",
+          message: "Timeline created for bottle and badge",
+          data: {},
+        });
       });
     }, rootRef);
 
     return () => {
       ctx.revert();
-      window.removeEventListener("keydown", handleKeyNav);
+      window.removeEventListener("keydown", handleKeyNav as any);
+      // Cleanup resize handlers registered above
       resizeHandlers.forEach((cleanup) => {
         try {
           cleanup();
         } catch {}
       });
     };
+  }, []);
+  
+  useEffect(() => {
+    // #region agent log
+    agentLog({
+      hypothesisId: "H7",
+      location: "app/(public)/page.tsx:lastSection",
+      message: "Last section bottle measure start",
+      data: {},
+    });
+    // Measure after paint
+    requestAnimationFrame(() => {
+      const wrap = lastBottleWrapRef.current;
+      const img = lastBottleImgRef.current as any;
+      const wrapRect = wrap?.getBoundingClientRect();
+      const imgRect = img?.getBoundingClientRect?.();
+      const computed = img ? window.getComputedStyle(img) : (null as any);
+      agentLog({
+        hypothesisId: "H7",
+        location: "app/(public)/page.tsx:lastSection",
+        message: "Last bottle measured",
+        data: {
+          wrapRect,
+          imgRect,
+          transform: computed?.transform ?? null,
+          top: img?.style?.top ?? null,
+          left: img?.style?.left ?? null,
+          right: img?.style?.right ?? null,
+        },
+      });
+    });
+    // #endregion
   }, []);
 
   const products = [
@@ -426,7 +542,7 @@ export default function Home() {
     <div ref={rootRef} className="bg-white text-zinc-950">
       <Navbar />
 
-      {/* Single Rose SVG - positioned absolutely, animated via ScrollTrigger */}
+      {/* Single Rose SVG - positioned absolutely, animated via ScrollTrigger (mobile parity) */}
       <div
         ref={roseSvgRef}
         className="pointer-events-none fixed z-30"
@@ -445,7 +561,7 @@ export default function Home() {
       {/* HERO */}
       <section ref={heroRef} className="relative overflow-hidden">
         <div className="mx-auto max-w-7xl items-center px-6">
-          <div className="relative z-1">
+          <div className="relative z-0">
             <h1
               ref={titleRef}
               className={`fade-in ${montaguSlab.className} text-center font-semibold leading-[0.8] tracking-[-0.03em] text-[72px] sm:text-[120px] lg:text-[230px]`}
@@ -465,7 +581,7 @@ export default function Home() {
             {/* Animated circles */}
             <div
               ref={circleOuterRef}
-              className="pointer-events-none absolute left-1/2 top-[55%] h-[820px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full z-1"
+              className="pointer-events-none absolute left-1/2 top-[55%] h-[820px] w-[820px] -translate-x-1/2 -translate-y-1/2 rounded-full "
               style={{
                 background:
                   "radial-gradient(circle at 50% 50%, #EB235C 0%, #EB235C 85%, rgba(255,93,168,0.0) 100%)",
@@ -473,7 +589,7 @@ export default function Home() {
             />
             <div
               ref={circleRef}
-              className="pointer-events-none absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full z-1"
+              className="pointer-events-none absolute left-1/2 top-1/2 h-[620px] w-[620px] -translate-x-1/2 -translate-y-1/2 rounded-full"
               style={{
                 background:
                   "radial-gradient(circle at 50% 58%, #FF2E8D 0%, #F2397A 28%, #EB235C 55%, rgba(235,35,92,0.25) 70%, rgba(235,35,92,0) 80%)",
@@ -490,8 +606,33 @@ export default function Home() {
                 padding: "20px" 
               }}
             />
-            {/* Bottle container for positioning context */}
+            {/* Bottle container for positioning context (parity with duplicate.tsx) */}
             <div ref={bottleContainerRef} className="absolute inset-0 flex items-center justify-center">
+              {/* <Image
+                ref={bottleRef}
+                src="/assets/Rose.png"
+                alt="Blossom Rosé bottle"
+                width={1600}
+                height={1619}
+                priority
+                className="drop-shadow-2xl z-1"
+                onLoad={() =>
+                  agentLog({
+                    hypothesisId: "H3",
+                    location: "app/(public)/page.tsx:heroBottle",
+                    message: "Hero bottle loaded",
+                    data: { src: "/assets/Rose.png" },
+                  })
+                }
+                onError={() =>
+                  agentLog({
+                    hypothesisId: "H3",
+                    location: "app/(public)/page.tsx:heroBottle",
+                    message: "Hero bottle failed",
+                    data: { src: "/assets/Rose.png" },
+                  })
+                }
+              /> */}
             </div>
 
             <Badge
@@ -510,19 +651,18 @@ export default function Home() {
 
             </div>
             <div ref={ctaRef} className="absolute right-6 bottom-6 z-20 opacity-100">
-              <a href="#collections" className="btn-3 relative inline-flex items-center px-8 py-3 font-semibold overflow-hidden">
-                <span className="btn-3-bg absolute inset-0"></span>
-                <span className="btn-3-text relative z-10 flex items-center gap-2 text-white">
-                  <span className="label">Shop Now</span>
-                  <span className="arrow">↗</span>
-                </span>
+              <a
+                href="#collections"
+                className="button inline-flex items-center rounded-full px-6 py-3"
+              >
+                Shop Now ↗
               </a>
             </div>
           </div>
         </div>
       </section>
 
-      <section ref={storyRef} id="story" className="relative overflow-hidden min-h-screen bg-gradient-to-br from-pink-500 to-rose-600 text-white z-1">
+      <section ref={storyRef} id="story" className="relative overflow-hidden min-h-screen bg-gradient-to-br from-pink-500 to-rose-600 text-white">
         <div className="mx-auto grid min-h-screen max-w-7xl grid-cols-1 items-center gap-16 px-6 py-20 lg:grid-cols-3">
           <div className="lg:col-span-1">
             <h2 className={`${montaguSlab.className} text-[48px] leading-[0.8] font-semibold tracking-[-0.03em]`}>Timeless Craft</h2>
@@ -547,84 +687,19 @@ export default function Home() {
               celebrates a moment.
             </p>
             <div className="mt-8">
-            <a href="#collections" className="btn-3 relative inline-flex items-center px-8 py-3 font-semibold overflow-hidden">
-              <span className="btn-3-bg absolute inset-0"></span>
-              <span className="btn-3-text relative z-10 flex items-center gap-2 text-white">
-                <span className="label">Shop Now</span>
-                <span className="arrow">↗</span>
-              </span>
-            </a>
+              <a
+                href="#collections"
+                className="button inline-flex items-center rounded-full px-6 py-3"
+              >
+                Shop Now ↗
+              </a>
             </div>
           </div>
         </div>
       </section>
 
-      <section ref={featuresRef} className="relative overflow-hidden bg-white min-h-screen">
-        {/* Top pink arc (shrunk circle) */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 z-0 -translate-x-1/2 rounded-full"
-          style={{
-            borderRadius: "50%",
-            width: 1862,
-            height: 1862,
-            overflow: "hidden",
-            top: "-180%",
-            background:
-              "radial-gradient(circle at 50% 58%, #FF2E8D 0%, #F2397A 28%, #EB235C 55%, rgb(235 35 92) 70%, rgba(235, 35, 92, 0) 100%)",
-          }}
-        />
-        {/* Soft floor shadow under arc */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute left-1/2 top-[80px] z-0 h-[140px] w-[820px] -translate-x-1/2"
-          style={{
-            background:
-              "radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.08) 40%, rgba(0,0,0,0) 70%)",
-            filter: "blur(8px)",
-            opacity: 0.6,
-          }}
-        />
-        {/* Desktop: icons placed along the arc */}
-        <div
-          className="hidden lg:block absolute left-1/2 top-[-120px] z-10"
-          style={{ width: 1545, height: 946, transform: "translateX(-50%)" }}
-        >
-          {[
-            { label: "Quick Delivery", img: "/assets/QuickDelivery.svg" },
-            { label: "Easy Returns", img: "/assets/EasyReturns.svg" },
-            { label: "Quality Assured", img: "/assets/QualityAssured.svg" },
-            { label: "Secure Payment", img: "/assets/SecurePayment.svg" },
-            { label: "Eco Friendly", img: "/assets/EcoFriendly.svg" },
-          ].map(({ label, img }, idx) => {
-            const a = 1545 / 2;
-            const b = 997 / 2;
-            const { x, y } = getEllipsePoint(featureAnglesDeg[idx], a * 0.78, b * 0.64);
-            return (
-              <div
-                key={label}
-                className="absolute flex flex-col items-center"
-                style={{
-                  left: "50%",
-                  top: "50%",
-                  transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
-                }}
-              >
-                <div className="flex items-center justify-center rounded-[75px] w-[150px] h-[150px] bg-white">
-                  <Image src={img} alt={label} width={150} height={150} />
-                </div>
-                <div className="mt-3 text-sm font-semibold text-zinc-800 text-center leading-tight">
-                  {label.split(" ").map((w, i) => (
-                    <div key={i}>{w}</div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        {/* Mobile/tablet fallback grid at the bottom */}
-        <div className="absolute bottom-[2%] lg:hidden" style={{justifySelf: 'center'}}
-        >
+      <section ref={featuresRef} className="relative bg-white">
+        <div className="mx-auto -mt-16 max-w-6xl rounded-t-[80px] bg-white px-6 pb-16 pt-16">
           <div className="grid grid-cols-2 gap-8 text-center sm:grid-cols-3 lg:grid-cols-5">
             {[
               { label: "Quick Delivery", img: "/assets/QuickDelivery.svg" },
@@ -675,7 +750,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section ref={collectionsRef} id="collections" className="relative overflow-hidden bg-white min-h-screen">
+      <section ref={collectionsRef} id="collections" className="relative overflow-hidden bg-white">
         <div className="mx-auto max-w-7xl px-6">
           <div className="absolute bg-white/80 top-[16%]">
             <div className="mx-auto flex max-w-7xl flex-col px-6 py-4">
@@ -703,12 +778,8 @@ export default function Home() {
                 Pour.
               </h1>
               <div className="mt-8">
-                <a href="#collections-grid" className="btn-3 relative inline-flex items-center px-8 py-3 font-semibold overflow-hidden">
-                  <span className="btn-3-bg absolute inset-0"></span>
-                  <span className="btn-3-text relative z-10 flex items-center gap-2 text-white">
-                    <span className="label">Shop Now</span>
-                    <span className="arrow">↗</span>
-                  </span>
+                <a href="#collections-grid" className="button inline-flex items-center rounded-full px-6 py-3">
+                  Shop Now ↗
                 </a>
 
               <Badge
@@ -738,6 +809,14 @@ export default function Home() {
                   transformOrigin: "143% 40%",
                   opacity: 1,
                 }}
+                onLoad={() =>
+                  agentLog({
+                    hypothesisId: "H7",
+                    location: "app/(public)/page.tsx:lastSection",
+                    message: "Last bottle image loaded",
+                    data: { src: "/assets/Rose.png" },
+                  })
+                }
               />
             </div>
           </div>
