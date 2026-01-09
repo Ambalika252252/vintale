@@ -62,7 +62,7 @@ npm run dev
 The app will be available at:
 
 ```
-https://vintale.vercel.app/
+http://localhost:3000/
 ```
 
 ## Deployment
@@ -72,7 +72,7 @@ The project is deployed on **Vercel**.
 Live URL:
 
 ```
-
+https://vintale.vercel.app/
 ```
 
 ## Notes & Assumptions
