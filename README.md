@@ -62,7 +62,7 @@ npm run dev
 The app will be available at:
 
 ```
-http://localhost:3000
+https://vintale.vercel.app/
 ```
 
 ## Deployment
